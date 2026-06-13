@@ -1,0 +1,11 @@
+# ===== SECRETS — never commit =====
+.secrets/
+*.env
+*.odt
+*.key
+*.pem
+
+# ===== transient / local =====
+*.log
+*.tgz
+*.bak

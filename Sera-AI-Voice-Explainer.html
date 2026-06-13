@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Sera — AI Voice Agent · How it works &amp; why</title>
+<style>
+  :root{
+    --bg:#0d1117;--panel:#161b22;--panel2:#1c2330;--line:#2a313c;
+    --ink:#e6edf3;--muted:#9aa7b4;--faint:#6b7888;
+    --oxe:#7c9cff;--mw:#46d39a;--el:#ff8a5b;--dept:#c792ea;
+    --hi:#ff5d5d;--med:#ffb454;--ok:#5bd6a0;--info:#58a6ff;--chip:#222b38;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;overflow-x:hidden}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 clamp(14px,4vw,24px)}
+  a{color:var(--info);text-decoration:none}
+  code{font-family:var(--mono);font-size:.86em;background:var(--chip);padding:1px 5px;border-radius:5px;color:#9fd0ff}
+
+  header.hero{padding:clamp(30px,6vw,52px) 0 26px;border-bottom:1px solid var(--line);
+    background:radial-gradient(1000px 360px at 80% -10%,rgba(70,211,154,.16),transparent 60%),
+               radial-gradient(760px 300px at 8% 0%,rgba(124,156,255,.12),transparent 55%)}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-weight:800}
+  h1{font-size:clamp(25px,5vw,40px);line-height:1.12;margin:10px 0 8px;font-weight:800;letter-spacing:-.02em}
+  .sub{color:var(--muted);font-size:clamp(14px,2.6vw,16px);max-width:760px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .pill{font-size:12px;color:var(--muted);background:var(--chip);border:1px solid var(--line);padding:5px 11px;border-radius:999px}
+  .pill b{color:var(--ink)}
+
+  section{padding:clamp(28px,5vw,40px) 0;border-bottom:1px solid var(--line)}
+  h2{font-size:clamp(19px,3.3vw,24px);font-weight:800;margin:0 0 6px;letter-spacing:-.01em}
+  .lede{color:var(--muted);margin:0 0 20px;max-width:820px}
+
+  /* flow */
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .tab{font-size:13px;font-weight:700;color:var(--muted);background:var(--panel2);border:1px solid var(--line);
+    border-radius:10px;padding:9px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.15s}
+  .tab .dot{width:9px;height:9px;border-radius:50%;background:currentColor}
+  .tab[data-s="happy"]{color:var(--el)} .tab[data-s="transfer"]{color:var(--oxe)} .tab[data-s="fallback"]{color:var(--med)}
+  .tab.active{background:var(--bg);box-shadow:0 0 0 1px currentColor inset;color:var(--ink)}
+  .tab.active .dot{box-shadow:0 0 8px currentColor}
+  svg.flow{width:100%;height:auto;display:block;background:radial-gradient(700px 220px at 50% 0%,rgba(124,156,255,.06),transparent);border-radius:10px}
+  .nr{stroke-width:1.6;transition:.25s}
+  .nr.dead{stroke:var(--hi)!important;fill:rgba(255,93,93,.10)!important}
+  .nt{fill:var(--ink);font:700 15px var(--sans)} .ns{fill:var(--faint);font:600 11px var(--mono)}
+  .seg{stroke:var(--line);stroke-width:2.4;stroke-dasharray:6 7}
+  .lbl{fill:var(--muted);font:600 10.5px var(--mono)}
+  .pkt{filter:drop-shadow(0 0 7px currentColor)}
+  .cap{margin-top:12px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-height:48px;
+    display:flex;align-items:center;gap:11px;font-size:13.5px}
+  .cap .pi{font-family:var(--mono);font-size:11px;font-weight:800;color:var(--bg);background:var(--mw);border-radius:6px;padding:3px 8px;flex:none}
+  .cap.transfer .pi{background:var(--oxe)} .cap.fallback .pi{background:var(--med)}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .ld{width:10px;height:10px;border-radius:50%}
+
+  /* options */
+  .opts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:780px){.opts{grid-template-columns:1fr}}
+  .opt{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:16px 18px;position:relative}
+  .opt .ph{position:absolute;top:-11px;left:14px;font-size:10.5px;font-weight:800;letter-spacing:.04em;color:var(--bg);
+    background:var(--mw);border-radius:6px;padding:3px 9px}
+  .opt.p2 .ph{background:var(--ok)} .opt.p3 .ph{background:var(--oxe)} .opt.p1 .ph{background:var(--el)}
+  .opt h3{margin:6px 0 6px;font-size:15px} .opt p{margin:0;color:var(--muted);font-size:13px}
+  .opt .risk{margin-top:9px;font-size:11.5px;font-weight:700}
+  .arrow{display:flex;align-items:center;justify-content:center;color:var(--faint);font-weight:800;margin:14px 0 4px;font-size:13px;letter-spacing:.04em}
+
+  /* qa */
+  details.qa{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin:10px 0;overflow:hidden}
+  details.qa>summary{cursor:pointer;list-style:none;padding:15px 18px;font-size:15px;font-weight:700;display:flex;align-items:center;gap:12px}
+  details.qa>summary::-webkit-details-marker{display:none}
+  details.qa>summary .q{flex:none;width:26px;height:26px;border-radius:8px;background:var(--chip);border:1px solid var(--line);
+    display:grid;place-items:center;font-family:var(--mono);font-size:13px;color:var(--info);font-weight:800}
+  details.qa>summary .chev{margin-left:auto;color:var(--faint);transition:.2s;font-size:18px}
+  details.qa[open]>summary .chev{transform:rotate(90deg)}
+  details.qa[open]>summary{color:var(--mw)}
+  .ans{padding:0 18px 16px 56px;color:var(--muted);font-size:13.8px}
+  .ans b{color:var(--ink)} .ans .an{color:var(--ok);font-style:italic}
+
+  .statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:760px){.statgrid{grid-template-columns:1fr 1fr}}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .stat b{display:block;font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;font-weight:800}
+  .stat .v{font-size:14px;margin-top:5px} .stat .v.ok{color:var(--ok)} .stat .v.wait{color:var(--med)}
+  footer{padding:30px 0 60px;color:var(--faint);font-size:12.5px}
+  @media print{.tabs,.tab{display:none}body{background:#fff;color:#111}}
+</style>
+</head>
+<body>
+
+<header class="hero"><div class="wrap">
+  <div class="eyebrow">the hotel · AI Voice Agent</div>
+  <h1>Meet “Sera” — how the AI phone assistant works, and why it’s built this way</h1>
+  <p class="sub">A plain-language walkthrough for the hotel team: watch a call flow through the system, then read the short answers to the “why do we need this?” questions — SIP, the Asterisk middleware, the new disk, and more.</p>
+  <div class="meta">
+    <span class="pill"><b>AI agent</b> · Sera (ElevenLabs)</span>
+    <span class="pill"><b>Bridge</b> · FreePBX / Asterisk middleware</span>
+    <span class="pill"><b>Phone system</b> · Alcatel OXE</span>
+    <span class="pill"><b>Safety rule</b> · always falls back to a human</span>
+  </div>
+</div></header>
+
+<!-- FLOW -->
+<section id="flow"><div class="wrap">
+  <h2>1 · The call flow — press play in your head, or tap a scenario</h2>
+  <p class="lede">The glowing signal is one phone call. Pick a scenario to see the path it takes. Notice the middleware is the <b>only</b> thing that reaches the internet — the hotel phone system never does.</p>
+
+  <div class="stage">
+    <div class="tabs">
+      <button class="tab active" data-s="happy"><span class="dot"></span>AI answers</button>
+      <button class="tab" data-s="transfer"><span class="dot"></span>Transfer to a human</button>
+      <button class="tab" data-s="fallback"><span class="dot"></span>AI down → Reception</button>
+    </div>
+
+    <svg class="flow" viewBox="0 0 1000 440" preserveAspectRatio="xMidYMid meet" aria-label="Call flow">
+      <!-- connectors -->
+      <line class="seg" x1="180" y1="102" x2="250" y2="102"/>
+      <line class="seg" x1="430" y1="102" x2="500" y2="102"/>
+      <line class="seg" x1="690" y1="102" x2="760" y2="102"/>
+      <path class="seg" d="M595,132 L595,300" fill="none"/>
+      <text class="lbl" x="215" y="92" text-anchor="middle">SIP</text>
+      <text class="lbl" x="465" y="92" text-anchor="middle" fill="#ffb454">UDP / RTP</text>
+      <text class="lbl" x="725" y="92" text-anchor="middle" fill="#46d39a">TLS / SRTP</text>
+      <text class="lbl" x="610" y="225" text-anchor="start">dial-back / fallback</text>
+
+      <!-- nodes -->
+      <g><rect class="nr" x="30" y="72" width="150" height="60" rx="12" fill="#1c2330" stroke="#2a313c"/>
+        <text class="nt" x="105" y="98" text-anchor="middle">Caller</text>
+        <text class="ns" x="105" y="116" text-anchor="middle">staff / in-room</text></g>
+      <g><rect class="nr" x="250" y="72" width="180" height="60" rx="12" fill="#1c2330" stroke="#7c9cff"/>
+        <text class="nt" x="340" y="98" text-anchor="middle">Alcatel OXE</text>
+        <text class="ns" x="340" y="116" text-anchor="middle">hotel phone system</text></g>
+      <g><rect class="nr" x="500" y="72" width="190" height="60" rx="12" fill="#1c2330" stroke="#46d39a"/>
+        <text class="nt" x="595" y="98" text-anchor="middle">Middleware</text>
+        <text class="ns" x="595" y="116" text-anchor="middle">FreePBX / Asterisk</text></g>
+      <g id="el"><rect class="nr" x="760" y="72" width="210" height="60" rx="12" fill="#1c2330" stroke="#ff8a5b"/>
+        <text class="nt" x="865" y="98" text-anchor="middle">Sera (AI)</text>
+        <text class="ns" x="865" y="116" text-anchor="middle">ElevenLabs · cloud</text></g>
+      <g><rect class="nr" x="500" y="300" width="190" height="62" rx="12" fill="#1c2330" stroke="#c792ea"/>
+        <text class="nt" x="595" y="326" text-anchor="middle">Department</text>
+        <text class="ns" x="595" y="344" text-anchor="middle">Reception / Housekeeping</text></g>
+
+      <!-- only egress marker -->
+      <text class="lbl" x="595" y="150" text-anchor="middle" fill="#46d39a">▲ only door to the internet</text>
+
+      <!-- packets (one per scenario) -->
+      <circle class="pkt happy" r="9" fill="#46d39a" color="#46d39a">
+        <animateMotion dur="5s" repeatCount="indefinite" path="M105,102 L340,102 L595,102 L865,102"/></circle>
+      <circle class="pkt transfer" r="9" fill="#7c9cff" color="#7c9cff" style="display:none">
+        <animateMotion dur="6.5s" repeatCount="indefinite" path="M105,102 L340,102 L595,102 L865,102 L595,102 L595,300"/></circle>
+      <circle class="pkt fallback" r="9" fill="#ffb454" color="#ffb454" style="display:none">
+        <animateMotion dur="4.5s" repeatCount="indefinite" path="M105,102 L340,102 L595,102 L595,300"/></circle>
+    </svg>
+
+    <div class="cap happy"><span class="pi">▶</span><span>Caller picks the AI → OXE passes it to the middleware → middleware connects to <b>Sera</b> over an encrypted internet link → Sera answers and helps.</span></div>
+    <div class="cap transfer" style="display:none"><span class="pi">▶</span><span>Guest asks for a person → the <b>middleware</b> rings the real department back inside the Alcatel (“dial-back”). The AI never wrestles with the old system’s transfer.</span></div>
+    <div class="cap fallback" style="display:none"><span class="pi">▶</span><span>If Sera or the internet is down, the middleware <b>automatically</b> sends the caller to Reception. A human always answers — the AI can never break the phones.</span></div>
+
+    <div class="legend">
+      <span><i class="ld" style="background:var(--oxe)"></i> Alcatel (internal)</span>
+      <span><i class="ld" style="background:var(--mw)"></i> Middleware (the bridge)</span>
+      <span><i class="ld" style="background:var(--el)"></i> Sera (cloud AI)</span>
+      <span><i class="ld" style="background:var(--dept)"></i> Human department</span>
+    </div>
+  </div>
+</div></section>
+
+<!-- ROLLOUT -->
+<section id="rollout"><div class="wrap">
+  <h2>2 · How we switch Sera on — gently, in three steps</h2>
+  <p class="lede">We don’t flip the whole switchboard to AI on day one. We crawl, walk, then run — proving it’s safe at each step.</p>
+  <div class="opts">
+    <div class="opt p2"><span class="ph">START · Phase 1</span><h3>Overflow &amp; after-hours</h3>
+      <p>Reception rings first. Sera only answers calls nobody picks up, or calls at night. Captures missed calls with almost no risk.</p>
+      <div class="risk" style="color:var(--ok)">Risk: very low</div></div>
+    <div class="opt p3"><span class="ph">NEXT · Phase 2</span><h3>Menu option</h3>
+      <p>The phone menu adds “press&nbsp;2 to speak to our assistant.” Callers choose Sera if they want her. Still opt-in.</p>
+      <div class="risk" style="color:var(--oxe)">Risk: low</div></div>
+    <div class="opt p1"><span class="ph">GOAL · Phase 3</span><h3>AI front door</h3>
+      <p>Sera greets everyone, answers, and routes to a human on request (“press&nbsp;0 for reception” anytime). Needs a bigger AI plan first.</p>
+      <div class="risk" style="color:var(--el)">Risk: managed — needs capacity + sign-off</div></div>
+  </div>
+  <div class="arrow">Phase 1 → Phase 2 → Phase 3 &nbsp;·&nbsp; the same middleware powers all three, no rebuild</div>
+</div></section>
+
+<!-- WHY QA -->
+<section id="why"><div class="wrap">
+  <h2>3 · “Why do we need this?” — the short answers</h2>
+  <p class="lede">Every piece earns its place. Tap a question.</p>
+
+  <details class="qa" open><summary><span class="q">?</span>Why do we need a “middleware” at all?<span class="chev">›</span></summary>
+    <div class="ans">The hotel’s Alcatel phone system and the cloud AI don’t speak the same way and shouldn’t be wired directly together. The middleware is a small <b>translator and safety gate</b> between them. <span class="an">Like a hotel switchboard operator who connects two people who otherwise couldn’t talk — and hangs up safely if something goes wrong.</span></div></details>
+
+  <details class="qa"><summary><span class="q">?</span>Why SIP?<span class="chev">›</span></summary>
+    <div class="ans"><b>SIP</b> is the standard “language” that phone systems and online voice services use to set up calls over the internet. It lets two software systems call each other <b>without any physical phone line</b>. <span class="an">It’s the common tongue — like everyone agreeing to speak English in a meeting so nobody needs a separate translator for each pair.</span></div></details>
+
+  <details class="qa"><summary><span class="q">?</span>Why Asterisk / FreePBX (and not just the Alcatel)?<span class="chev">›</span></summary>
+    <div class="ans">Asterisk is the proven, free engine that actually <b>runs our call logic</b> — connect to Sera, ring a department, fall back to Reception. We keep this logic <b>on our side</b> so transfers and the safety fallback are reliable, instead of depending on fragile features in the old Alcatel. FreePBX is just the friendly control panel on top. <span class="an">It’s our own smart receptionist we fully control — rather than hoping the old system behaves.</span></div></details>
+
+  <details class="qa"><summary><span class="q">?</span>Why must the Alcatel never touch the internet?<span class="chev">›</span></summary>
+    <div class="ans">The hotel phone system is critical and was never built to face the open internet — exposing it invites fraud and attacks. So it stays in its safe internal bubble, and <b>only the middleware</b> is allowed to reach out. <span class="an">The Alcatel stays in the back office; the middleware is the one doorway with a guard on it.</span></div></details>
+
+  <details class="qa"><summary><span class="q">?</span>Why a new (second) disk / RAID mirror?<span class="chev">›</span></summary>
+    <div class="ans">The current drive is healthy but <b>about 10 years old</b> — old drives eventually fail. A second matching disk in a “mirror” keeps an identical copy at all times, so if one dies the system keeps running with <b>zero downtime or data loss</b>. <span class="an">A spare tyre that’s already on the car and spinning — not one in the boot you have to stop and fit.</span></div></details>
+
+  <details class="qa"><summary><span class="q">?</span>Why “dial-back” for transfers instead of letting the AI transfer?<span class="chev">›</span></summary>
+    <div class="ans">When the AI tries to hand a call straight into the old Alcatel, that hand-off is historically unreliable (dropped or one-way audio). Instead, our middleware simply <b>rings the department itself</b> and bridges the caller in. <span class="an">Rather than passing a hot dish across the table, the operator carries it round and places it down — far less gets dropped.</span></div></details>
+
+  <details class="qa"><summary><span class="q">?</span>Why is the AI “external,” and do we need an external phone line?<span class="chev">›</span></summary>
+    <div class="ans"><b>No external phone line is needed.</b> Sera lives in ElevenLabs’ cloud (on the internet), so she’s “external” only in that sense. The middleware reaches her over an encrypted internet link, software-to-software. The “number” the system uses is just a <b>name tag</b> for that connection, not a real line you buy or call.</div></details>
+
+  <details class="qa"><summary><span class="q">?</span>Why digest login + SRTP on the AI connection?<span class="chev">›</span></summary>
+    <div class="ans">The link to Sera is protected two ways: a <b>username &amp; password</b> (digest auth) so only our system can use it, and <b>SRTP</b> which scrambles the audio so nobody can eavesdrop. <span class="an">A locked door plus a sealed envelope for what travels through it.</span></div></details>
+
+  <details class="qa"><summary><span class="q">?</span>Why does it always fall back to Reception?<span class="chev">›</span></summary>
+    <div class="ans">The golden rule: <b>the AI can never break normal phone service.</b> If Sera is slow, down, or the internet drops, the middleware instantly routes the caller to a human. <span class="an">The AI is a helpful extra, never a single point of failure.</span></div></details>
+
+  <details class="qa"><summary><span class="q">?</span>Why roll out in phases instead of switching everything to AI now?<span class="chev">›</span></summary>
+    <div class="ans">Letting AI answer <b>every</b> call from day one means any hiccup hits everyone, and needs a much larger AI capacity plan. Starting with missed/after-hours calls proves it safely and captures real value first. <span class="an">Crawl, walk, then run.</span></div></details>
+
+  <details class="qa"><summary><span class="q">?</span>Why a UPS battery and “restore on power” setting?<span class="chev">›</span></summary>
+    <div class="ans">So the system survives a power cut and <b>comes back by itself</b>, unattended — important for a 24/7 hotel where nobody should have to run to a back room to restart a box at 3am.</div></details>
+
+  <details class="qa"><summary><span class="q">?</span>Why the care about guest data &amp; privacy?<span class="chev">›</span></summary>
+    <div class="ans">Sera’s recording is off and nothing is retained. Because she now also takes service requests (and may hear a room number), that information reaches the AI cloud — so this needs the <b>hotel’s privacy sign-off</b> before handling real guests. Sensitive items — cards, passports, payments — are <b>never</b> handled by the AI; those always go to a person.</div></details>
+</div></section>
+
+<!-- STATUS -->
+<section id="status"><div class="wrap">
+  <h2>4 · Where the project stands today</h2>
+  <p class="lede">The two ends are built and tested; we’re waiting on the hotel/vendor inputs to wire them together.</p>
+  <div class="statgrid">
+    <div class="stat"><b>Middleware box</b><div class="v ok">Built &amp; hardened ✓</div></div>
+    <div class="stat"><b>Sera (AI agent)</b><div class="v ok">Built · tested ✓</div></div>
+    <div class="stat"><b>AI phone trunk</b><div class="v ok">Created ✓</div></div>
+    <div class="stat"><b>Knowledge base</b><div class="v ok">Live (shared) ✓</div></div>
+    <div class="stat"><b>Alcatel link</b><div class="v wait">Waiting: OXE IP + access</div></div>
+    <div class="stat"><b>Network</b><div class="v wait">Waiting: flat vs VLAN</div></div>
+    <div class="stat"><b>Privacy sign-off</b><div class="v wait">Waiting: hotel approval</div></div>
+    <div class="stat"><b>Front-door capacity</b><div class="v wait">Waiting: AI plan upgrade</div></div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <div><b style="color:var(--ink)">the hotel — AI Voice Agent (Sera).</b> Plain-language explainer for the hotel team.</div>
+  <div>Safety guarantees: the Alcatel never touches the internet · the middleware is the only egress · the AI can never break normal phone service.</div>
+  <div>Self-contained · works offline · print-friendly · prepared June 2026.</div>
+</div></footer>
+
+<script>
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.addEventListener('click',function(){
+      document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
+      t.classList.add('active');
+      var s=t.dataset.s;
+      ['happy','transfer','fallback'].forEach(function(k){
+        var pk=document.querySelector('.pkt.'+k); if(pk) pk.style.display=(k===s?'':'none');
+        var cp=document.querySelector('.cap.'+k); if(cp) cp.style.display=(k===s?'':'none');
+      });
+      document.getElementById('el').querySelector('.nr').classList.toggle('dead', s==='fallback');
+    });
+  });
+</script>
+</body>
+</html>

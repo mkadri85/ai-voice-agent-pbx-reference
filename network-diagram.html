@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>AI Voice Agent PBX — Network Diagram &amp; Communication Matrix</title>
+<style>
+  :root{
+    --bg:#0d1117;--panel:#161b22;--panel2:#1c2330;--line:#2a313c;--ink:#e6edf3;--muted:#9aa7b4;--faint:#6b7888;
+    --oxe:#7c9cff;--mw:#46d39a;--el:#ff8a5b;--mgmt:#c792ea;--inet:#ffb454;--hi:#ff5d5d;--ok:#5bd6a0;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 20px}
+  header{padding:34px 0 22px;border-bottom:1px solid var(--line);background:radial-gradient(900px 320px at 80% -10%,rgba(70,211,154,.14),transparent 60%)}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-weight:800}
+  h1{font-size:clamp(22px,4vw,32px);margin:8px 0 6px;font-weight:800;letter-spacing:-.02em}
+  .sub{color:var(--muted);font-size:14px;max-width:760px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .pill{font-size:12px;color:var(--muted);background:#222b38;border:1px solid var(--line);padding:5px 11px;border-radius:999px}
+  .pill b{color:var(--ink)}
+  section{padding:30px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:20px;font-weight:800;margin:0 0 14px;display:flex;align-items:center;gap:10px}
+  h2 .n{font-family:var(--mono);font-size:12px;color:var(--bg);background:var(--mw);border-radius:7px;padding:3px 9px}
+  svg.net{width:100%;height:auto;display:block;background:var(--panel);border:1px solid var(--line);border-radius:13px}
+  .nb{fill:var(--panel2);stroke-width:1.6}
+  .nt{fill:var(--ink);font:700 13px var(--sans)} .nip{fill:#9fd0ff;font:600 11px var(--mono)} .nr{fill:var(--faint);font:600 10px var(--mono)}
+  .zl{font:800 11px var(--sans);letter-spacing:.06em}
+  .flow{fill:none;stroke-width:2.2} .flowlbl{font:600 10.5px var(--mono)}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:6px} .ld{width:11px;height:11px;border-radius:3px}
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:860px}
+  th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);font-weight:800;background:var(--panel2);position:sticky;top:0}
+  tr:last-child td{border-bottom:none}
+  td.mono,th.mono{font-family:var(--mono)}
+  .dir{font-family:var(--mono);font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap}
+  .dir.in{background:rgba(124,156,255,.16);color:#aac0ff} .dir.out{background:rgba(255,138,91,.16);color:#ffb494} .dir.both{background:rgba(91,214,160,.16);color:#8fe7bd}
+  .enc{font-size:11px;font-weight:700} .enc.y{color:var(--ok)} .enc.n{color:var(--faint)}
+  .callout{border:1px solid var(--line);background:var(--panel2);border-radius:12px;padding:14px 16px;margin:14px 0;font-size:13px;color:var(--muted)}
+  .callout.warn{border-color:rgba(255,180,84,.4)} .callout.ok{border-color:rgba(91,214,160,.4)}
+  .callout b{color:var(--ink)}
+  footer{padding:24px 0 50px;color:var(--faint);font-size:12px}
+  @media print{body{background:#fff;color:#111}svg.net,.tablewrap,.callout{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="eyebrow">AI Voice Agent PBX · Network Reference</div>
+  <h1>Network Diagram &amp; Communication Matrix</h1>
+  <p class="sub">On-prem AI voice middleware (FreePBX / Asterisk) bridging an Alcatel OmniPCX PBX to an ElevenLabs voice agent. For the network / security team. All IPs and ports reflect the live pilot.</p>
+  <div class="meta">
+    <span class="pill"><b>Middleware</b> 10.0.0.10 / NAT 203.0.113.10</span>
+    <span class="pill"><b>Alcatel OXE</b> 172.16.0.5 (sig) · 172.16.0.8 (media)</span>
+    <span class="pill"><b>ElevenLabs</b> sip-static.rtc.elevenlabs.io 199.88.252.34</span>
+  </div>
+</div></header>
+
+<!-- DIAGRAM -->
+<section><div class="wrap">
+  <h2><span class="n">1</span> Network diagram</h2>
+  <svg class="net" viewBox="0 0 1040 560" preserveAspectRatio="xMidYMid meet" aria-label="Network diagram">
+    <!-- zone backgrounds -->
+    <rect x="14" y="44" width="300" height="500" rx="12" fill="rgba(124,156,255,.05)" stroke="rgba(124,156,255,.35)" stroke-dasharray="5 5"/>
+    <rect x="372" y="44" width="296" height="500" rx="12" fill="rgba(70,211,154,.05)" stroke="rgba(70,211,154,.4)" stroke-dasharray="5 5"/>
+    <rect x="726" y="44" width="300" height="500" rx="12" fill="rgba(255,138,91,.05)" stroke="rgba(255,138,91,.35)" stroke-dasharray="5 5"/>
+    <text class="zl" x="164" y="34" text-anchor="middle" fill="#7c9cff">HOTEL INTERNAL  (no internet)</text>
+    <text class="zl" x="520" y="34" text-anchor="middle" fill="#46d39a">MIDDLEWARE  (only egress point)</text>
+    <text class="zl" x="876" y="34" text-anchor="middle" fill="#ff8a5b">INTERNET  (outbound only)</text>
+
+    <!-- nodes: hotel -->
+    <g>
+      <rect class="nb" x="40" y="70" width="240" height="62" rx="11" stroke="#7c9cff"/>
+      <text class="nt" x="160" y="92" text-anchor="middle">Caller (staff / in-room)</text>
+      <text class="nr" x="160" y="110" text-anchor="middle">dials <EXT>  ·  ext <DID></text>
+    </g>
+    <g>
+      <rect class="nb" x="40" y="168" width="240" height="76" rx="11" stroke="#7c9cff"/>
+      <text class="nt" x="160" y="190" text-anchor="middle">Alcatel OXE — call server</text>
+      <text class="nip" x="160" y="210" text-anchor="middle">172.16.0.5</text>
+      <text class="nr" x="160" y="228" text-anchor="middle">SIP signalling</text>
+    </g>
+    <g>
+      <rect class="nb" x="40" y="280" width="240" height="76" rx="11" stroke="#7c9cff"/>
+      <text class="nt" x="160" y="302" text-anchor="middle">Alcatel OXE — media gateway</text>
+      <text class="nip" x="160" y="322" text-anchor="middle">172.16.0.8  (/24)</text>
+      <text class="nr" x="160" y="340" text-anchor="middle">RTP voice media</text>
+    </g>
+    <g>
+      <rect class="nb" x="40" y="448" width="240" height="74" rx="11" stroke="#c792ea"/>
+      <text class="nt" x="160" y="470" text-anchor="middle">Admin / Mgmt LAN</text>
+      <text class="nip" x="160" y="490" text-anchor="middle">10.0.0.0/24</text>
+      <text class="nr" x="160" y="508" text-anchor="middle">SSH 22 · FreePBX UI 443</text>
+    </g>
+
+    <!-- node: middleware -->
+    <g>
+      <rect class="nb" x="396" y="210" width="248" height="120" rx="13" stroke="#46d39a" stroke-width="2.4"/>
+      <text class="nt" x="520" y="240" text-anchor="middle">FreePBX / Asterisk middleware</text>
+      <text class="nip" x="520" y="262" text-anchor="middle">10.0.0.10 /24</text>
+      <text class="nr" x="520" y="280" text-anchor="middle">gw 10.0.0.1</text>
+      <text class="nip" x="520" y="302" text-anchor="middle">public (NAT) 203.0.113.10</text>
+      <text class="nr" x="520" y="320" text-anchor="middle">UDP/RTP in  ↔  TLS/SRTP out</text>
+    </g>
+
+    <!-- nodes: internet -->
+    <g>
+      <rect class="nb" x="752" y="168" width="248" height="92" rx="11" stroke="#ff8a5b"/>
+      <text class="nt" x="876" y="190" text-anchor="middle">ElevenLabs — SIP (Sera)</text>
+      <text class="nr" x="876" y="208" text-anchor="middle">sip-static.rtc.elevenlabs.io</text>
+      <text class="nip" x="876" y="227" text-anchor="middle">199.88.252.34 : 5061</text>
+      <text class="nr" x="876" y="245" text-anchor="middle">TLS signalling</text>
+    </g>
+    <g>
+      <rect class="nb" x="752" y="290" width="248" height="76" rx="11" stroke="#ff8a5b"/>
+      <text class="nt" x="876" y="312" text-anchor="middle">ElevenLabs — media</text>
+      <text class="nr" x="876" y="330" text-anchor="middle">dynamic (Google Cloud)</text>
+      <text class="nr" x="876" y="348" text-anchor="middle">SRTP voice</text>
+    </g>
+    <g>
+      <rect class="nb" x="752" y="430" width="248" height="70" rx="11" stroke="#ffb454"/>
+      <text class="nt" x="876" y="452" text-anchor="middle">Infra (outbound)</text>
+      <text class="nr" x="876" y="470" text-anchor="middle">DNS 53 · NTP 123 · repos 80/443</text>
+      <text class="nr" x="876" y="488" text-anchor="middle">GitHub SSH 22 (admin)</text>
+    </g>
+
+    <!-- flows -->
+    <!-- caller -> oxe -->
+    <line class="flow" x1="160" y1="132" x2="160" y2="168" stroke="#7c9cff"/>
+    <!-- oxe sig -> mw -->
+    <path class="flow" d="M280,206 H396" stroke="#7c9cff" marker-end="url(#a7)"/>
+    <text class="flowlbl" x="338" y="198" text-anchor="middle" fill="#7c9cff">SIP UDP 5060</text>
+    <!-- oxe media <-> mw -->
+    <path class="flow" d="M280,316 H396 V300" stroke="#7c9cff" marker-end="url(#a7)" marker-start="url(#s7)"/>
+    <text class="flowlbl" x="338" y="332" text-anchor="middle" fill="#7c9cff">RTP UDP 10000-20000</text>
+    <!-- admin -> mw -->
+    <path class="flow" d="M280,485 H520 V330" stroke="#c792ea" marker-end="url(#ac)"/>
+    <text class="flowlbl" x="392" y="478" text-anchor="middle" fill="#c792ea">SSH 22 · HTTPS 443</text>
+    <!-- mw -> EL sig -->
+    <path class="flow" d="M644,250 H752 V214" stroke="#ff8a5b" marker-end="url(#ae)"/>
+    <text class="flowlbl" x="700" y="234" text-anchor="middle" fill="#ff8a5b">SIP-TLS TCP 5061</text>
+    <!-- mw <-> EL media -->
+    <path class="flow" d="M644,300 H700 V328 H752" stroke="#ff8a5b" marker-end="url(#ae)" marker-start="url(#se)"/>
+    <text class="flowlbl" x="690" y="352" text-anchor="middle" fill="#ff8a5b">SRTP UDP</text>
+    <!-- mw -> infra -->
+    <path class="flow" d="M560,330 V465 H752" stroke="#ffb454" marker-end="url(#ai)"/>
+    <text class="flowlbl" x="650" y="458" text-anchor="middle" fill="#ffb454">DNS/NTP/repos</text>
+
+    <defs>
+      <marker id="a7" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#7c9cff"/></marker>
+      <marker id="s7" markerWidth="9" markerHeight="9" refX="2" refY="3" orient="auto"><path d="M7,0 L0,3 L7,6 Z" fill="#7c9cff"/></marker>
+      <marker id="ac" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#c792ea"/></marker>
+      <marker id="ae" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#ff8a5b"/></marker>
+      <marker id="se" markerWidth="9" markerHeight="9" refX="2" refY="3" orient="auto"><path d="M7,0 L0,3 L7,6 Z" fill="#ff8a5b"/></marker>
+      <marker id="ai" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#ffb454"/></marker>
+    </defs>
+  </svg>
+  <div class="legend">
+    <span><i class="ld" style="background:var(--oxe)"></i> Hotel internal (OXE)</span>
+    <span><i class="ld" style="background:var(--mw)"></i> Middleware</span>
+    <span><i class="ld" style="background:var(--el)"></i> ElevenLabs (internet)</span>
+    <span><i class="ld" style="background:var(--mgmt)"></i> Admin / mgmt</span>
+    <span><i class="ld" style="background:var(--inet)"></i> Infra</span>
+  </div>
+  <div class="callout ok"><b>Key guarantee:</b> the Alcatel OXE has no path to the internet. The middleware (10.0.0.10) is the <b>only</b> host that egresses, and only to ElevenLabs + DNS/NTP/repos.</div>
+</div></section>
+
+<!-- MATRIX -->
+<section><div class="wrap">
+  <h2><span class="n">2</span> Communication matrix</h2>
+  <div class="tablewrap"><table>
+    <thead><tr>
+      <th>#</th><th>Source</th><th>Destination</th><th>Proto</th><th class="mono">Port(s)</th><th>Dir</th><th>Encryption</th><th>Purpose</th>
+    </tr></thead>
+    <tbody>
+      <tr><td>1</td><td class="mono">OXE call server 172.16.0.5</td><td class="mono">Middleware 10.0.0.10</td><td>SIP / UDP</td><td class="mono">5060</td><td><span class="dir in">IN</span></td><td><span class="enc n">none (internal)</span></td><td>Call signalling (setup/teardown)</td></tr>
+      <tr><td>2</td><td class="mono">OXE media gw 172.16.0.0/24</td><td class="mono">Middleware 10.0.0.10</td><td>RTP / UDP</td><td class="mono">10000-20000</td><td><span class="dir both">BOTH</span></td><td><span class="enc n">none (internal)</span></td><td>Voice media, caller ↔ middleware</td></tr>
+      <tr><td>3</td><td class="mono">Middleware 203.0.113.10 (NAT)</td><td class="mono">ElevenLabs 199.88.252.34</td><td>SIP / TLS / TCP</td><td class="mono">5061</td><td><span class="dir out">OUT</span></td><td><span class="enc y">TLS 1.2</span></td><td>Signalling to AI agent (Sera)</td></tr>
+      <tr><td>4</td><td class="mono">Middleware 203.0.113.10 (NAT)</td><td class="mono">ElevenLabs media (dynamic)</td><td>SRTP / UDP</td><td class="mono">10000-60000</td><td><span class="dir both">BOTH</span></td><td><span class="enc y">SRTP</span></td><td>Voice media to/from Sera</td></tr>
+      <tr><td>5</td><td class="mono">Admin LAN 10.0.0.0/24</td><td class="mono">Middleware 10.0.0.10</td><td>SSH / TCP</td><td class="mono">22</td><td><span class="dir in">IN</span></td><td><span class="enc y">SSH</span></td><td>Administration (CLI)</td></tr>
+      <tr><td>6</td><td class="mono">Admin LAN 10.0.0.0/24</td><td class="mono">Middleware 10.0.0.10</td><td>HTTPS / TCP</td><td class="mono">443</td><td><span class="dir in">IN</span></td><td><span class="enc y">TLS</span></td><td>FreePBX web UI</td></tr>
+      <tr><td>7</td><td class="mono">Middleware 10.0.0.10</td><td class="mono">DNS resolvers</td><td>DNS / UDP+TCP</td><td class="mono">53</td><td><span class="dir out">OUT</span></td><td><span class="enc n">-</span></td><td>Name resolution</td></tr>
+      <tr><td>8</td><td class="mono">Middleware 10.0.0.10</td><td class="mono">NTP servers</td><td>NTP / UDP</td><td class="mono">123</td><td><span class="dir out">OUT</span></td><td><span class="enc n">-</span></td><td>Time sync (chrony)</td></tr>
+      <tr><td>9</td><td class="mono">Middleware 10.0.0.10</td><td class="mono">OS / app repositories</td><td>HTTP/S / TCP</td><td class="mono">80, 443</td><td><span class="dir out">OUT</span></td><td><span class="enc y">TLS</span></td><td>Updates (apt, FreePBX modules)</td></tr>
+      <tr><td>10</td><td class="mono">Middleware 10.0.0.10</td><td class="mono">github.com (admin)</td><td>SSH / TCP</td><td class="mono">22</td><td><span class="dir out">OUT</span></td><td><span class="enc y">SSH</span></td><td>Config repo backup (optional)</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout warn"><b>Perimeter firewall requirement (rows 3–4):</b> the hotel firewall must allow <b>10.0.0.10 → ElevenLabs (199.88.252.34) TCP 5061</b> and the <b>SRTP media UDP range</b>, and have <b>SIP ALG disabled</b>. All other outbound SIP stays blocked.</div>
+  <div class="callout"><b>NAT note:</b> the middleware is private <b>10.0.0.10</b>, presented to the internet as <b>203.0.113.10</b> via the hotel gateway. Asterisk advertises 203.0.113.10 for media so ElevenLabs returns audio correctly. If the public IP changes, the Asterisk <code>external_media_address</code> must be updated.</div>
+</div></section>
+
+<footer><div class="wrap">
+  AI Voice Agent PBX — network reference. Guarantees: OXE never reaches the internet · middleware is the only egress · AI failure falls back to a human. Values reflect the live pilot; review before production lockdown.
+</div></footer>
+</body>
+</html>
